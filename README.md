@@ -1,650 +1,838 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRE BANGLADESH - Online Learning Platform</title>
+    <title>GRE Bangladesh - Live Learning Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .hidden { display: none; }
-        .active-tab { background-color: #3b82f6; color: white; }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dashboard-hidden {
+            display: none;
+        }
+        
+        .dashboard-active {
+            display: block;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
+    <!-- Notification System -->
+    <div id="notification" class="notification bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+        <span id="notification-text"></span>
+    </div>
+
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg">
+    <nav class="bg-white shadow-lg fixed w-full top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <div class="text-2xl font-bold text-blue-600">🎓 GRE BANGLADESH</div>
+                    <div class="text-2xl font-bold text-blue-600">🎓 GRE Bangladesh</div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <button id="loginBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        Login
-                    </button>
-                    <button id="signupBtn" class="border border-blue-600 text-blue-600 px-6 py-2 rounded-lg hover:bg-blue-50 transition-colors">
-                        Sign Up
-                    </button>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#home" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Home</a>
+                    <a href="#courses" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Courses</a>
+                    <a href="#about" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">About</a>
+                    <button onclick="openModal('loginModal')" class="text-blue-600 hover:text-blue-800 font-medium">Login</button>
+                    <button onclick="openModal('registerModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Register</button>
+                    <div id="user-menu" class="hidden">
+                        <span id="user-name" class="text-gray-700 mr-4"></span>
+                        <button onclick="logout()" class="text-red-600 hover:text-red-800">Logout</button>
+                    </div>
                 </div>
+                <button id="mobile-menu-btn" class="md:hidden text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="heroSection" class="gradient-bg py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">
-                Master Your GRE
-                <span class="block">Journey Starts Here</span>
-            </h1>
-            <p class="text-xl text-white/90 mb-8 max-w-3xl mx-auto">
-                Join Bangladesh's premier online GRE preparation platform. Connect with expert lecturers, attend live classes, and achieve your dream score.
-            </p>
-            <div class="space-x-4">
-                <button id="getStartedBtn" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                    Get Started Today
-                </button>
-                <button class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
-                    Watch Demo
-                </button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="featuresSection" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Choose GRE Bangladesh?</h2>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                    Experience world-class GRE preparation with our comprehensive online platform
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Hero Section -->
+        <section id="home" class="gradient-bg min-h-screen flex items-center justify-center pt-16">
+            <div class="text-center text-white px-4 fade-in">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6">
+                    Master Your <span class="text-yellow-300">GRE</span>
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
+                    Join Bangladesh's premier GRE preparation platform with live classes, expert instructors, and personalized learning
                 </p>
+                <div class="space-x-4">
+                    <button onclick="openModal('registerModal')" class="bg-yellow-400 text-blue-900 px-8 py-3 rounded-full font-semibold hover:bg-yellow-300 transition-colors">
+                        Start Learning Today
+                    </button>
+                    <button onclick="scrollToSection('courses')" class="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+                        View Courses
+                    </button>
+                </div>
+                <div class="mt-12 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold" id="student-count">0</div>
+                        <div class="text-sm opacity-80">Active Students</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold" id="lecturer-count">0</div>
+                        <div class="text-sm opacity-80">Expert Lecturers</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold" id="course-count">0</div>
+                        <div class="text-sm opacity-80">Live Courses</div>
+                    </div>
+                </div>
             </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="text-center p-6 card-hover bg-gray-50 rounded-xl">
-                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-2xl">👨‍🏫</span>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Expert Lecturers</h3>
-                    <p class="text-gray-600">Learn from certified GRE instructors with proven track records</p>
-                </div>
-                <div class="text-center p-6 card-hover bg-gray-50 rounded-xl">
-                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-2xl">📹</span>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Live Classes</h3>
-                    <p class="text-gray-600">Interactive online sessions with real-time Q&A and discussions</p>
-                </div>
-                <div class="text-center p-6 card-hover bg-gray-50 rounded-xl">
-                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-2xl">📊</span>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Progress Tracking</h3>
-                    <p class="text-gray-600">Monitor your improvement with detailed analytics and reports</p>
-                </div>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Login Modal -->
-    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-2" id="modalTitle">Welcome Back!</h2>
-                <p class="text-gray-600" id="modalSubtitle">Sign in to your GRE Bangladesh account</p>
+        <!-- Courses Section -->
+        <section id="courses" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Live GRE Courses</h2>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                        Interactive live classes with Bangladesh's top GRE instructors
+                    </p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8" id="courses-grid">
+                    <!-- Courses will be populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-20 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Why Choose GRE Bangladesh?</h2>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="text-center card-hover bg-white p-8 rounded-lg shadow-lg">
+                        <div class="text-5xl mb-4">🎯</div>
+                        <h3 class="text-xl font-semibold mb-4">Targeted Preparation</h3>
+                        <p class="text-gray-600">Focused curriculum designed specifically for Bangladeshi students</p>
+                    </div>
+                    <div class="text-center card-hover bg-white p-8 rounded-lg shadow-lg">
+                        <div class="text-5xl mb-4">👨‍🏫</div>
+                        <h3 class="text-xl font-semibold mb-4">Expert Instructors</h3>
+                        <p class="text-gray-600">Learn from certified GRE experts with proven track records</p>
+                    </div>
+                    <div class="text-center card-hover bg-white p-8 rounded-lg shadow-lg">
+                        <div class="text-5xl mb-4">📱</div>
+                        <h3 class="text-xl font-semibold mb-4">Live Interactive Classes</h3>
+                        <p class="text-gray-600">Real-time learning with instant feedback and doubt clearing</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div id="student-dashboard" class="dashboard-hidden pt-16 min-h-screen bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">Student Dashboard</h1>
+                <p class="text-gray-600">Welcome back, <span id="student-name-display"></span>!</p>
             </div>
             
-            <!-- Login Type Tabs -->
-            <div class="flex mb-6 bg-gray-100 rounded-lg p-1">
-                <button id="studentTab" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors active-tab">
-                    Student
-                </button>
-                <button id="lecturerTab" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors text-gray-600">
-                    Lecturer
-                </button>
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Enrolled Courses</h3>
+                    <div class="text-3xl font-bold text-blue-600" id="enrolled-courses">0</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Live Classes</h3>
+                    <div class="text-3xl font-bold text-green-600" id="live-classes">0</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Practice Tests</h3>
+                    <div class="text-3xl font-bold text-purple-600" id="practice-tests">0</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Progress</h3>
+                    <div class="text-3xl font-bold text-yellow-600" id="progress">0%</div>
+                </div>
             </div>
 
-            <!-- Login Form -->
-            <form id="loginForm">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" id="loginEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="your@email.com" required>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">My Courses</h3>
+                    <div id="student-courses" class="space-y-4">
+                        <!-- Student courses will be populated here -->
+                    </div>
                 </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input type="password" id="loginPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="••••••••" required>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Upcoming Classes</h3>
+                    <div id="upcoming-classes" class="space-y-4">
+                        <!-- Upcoming classes will be populated here -->
+                    </div>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
-                    Sign In
-                </button>
-            </form>
-
-            <!-- Signup Form -->
-            <form id="signupForm" class="hidden">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                    <input type="text" id="signupName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your full name" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" id="signupEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="your@email.com" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <input type="tel" id="signupPhone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+880 1XXX-XXXXXX" required>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input type="password" id="signupPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Create a strong password" required>
-                </div>
-                <div class="mb-6">
-                    <label class="flex items-center">
-                        <input type="checkbox" id="agreeTerms" class="mr-2" required>
-                        <span class="text-sm text-gray-600">I agree to the Terms of Service and Privacy Policy</span>
-                    </label>
-                </div>
-                <button type="submit" class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors">
-                    Create Account
-                </button>
-            </form>
-            
-            <div class="mt-6 text-center">
-                <button id="switchToSignup" class="text-blue-600 hover:text-blue-700 mr-4">Don't have an account? Sign up</button>
-                <button id="switchToLogin" class="text-blue-600 hover:text-blue-700 mr-4 hidden">Already have an account? Sign in</button>
-                <button id="closeModal" class="text-gray-500 hover:text-gray-700">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- Dashboard Section (Hidden initially) -->
-    <section id="dashboardSection" class="hidden py-20 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Dashboard Header -->
-            <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900" id="dashboardTitle">Student Dashboard</h1>
-                        <p class="text-gray-600" id="dashboardSubtitle">Welcome back! Ready to continue your GRE preparation?</p>
-                    </div>
-                    <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
-                        Logout
-                    </button>
+    <!-- Lecturer Dashboard -->
+    <div id="lecturer-dashboard" class="dashboard-hidden pt-16 min-h-screen bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">Lecturer Dashboard</h1>
+                <p class="text-gray-600">Welcome, <span id="lecturer-name-display"></span>!</p>
+            </div>
+            
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">My Courses</h3>
+                    <div class="text-3xl font-bold text-blue-600" id="lecturer-courses">0</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Total Students</h3>
+                    <div class="text-3xl font-bold text-green-600" id="total-students">0</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Live Sessions</h3>
+                    <div class="text-3xl font-bold text-purple-600" id="live-sessions">0</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Rating</h3>
+                    <div class="text-3xl font-bold text-yellow-600" id="lecturer-rating">4.8★</div>
                 </div>
             </div>
 
-            <!-- Student Dashboard -->
-            <div id="studentDashboard">
-                <div class="grid md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white rounded-xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">My Classes</h3>
-                            <span class="text-2xl">📚</span>
-                        </div>
-                        <p class="text-3xl font-bold text-blue-600 mb-2">12</p>
-                        <p class="text-gray-600">Classes Enrolled</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Progress</h3>
-                            <span class="text-2xl">📈</span>
-                        </div>
-                        <p class="text-3xl font-bold text-green-600 mb-2">78%</p>
-                        <p class="text-gray-600">Course Completion</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Next Class</h3>
-                            <span class="text-2xl">⏰</span>
-                        </div>
-                        <p class="text-lg font-bold text-purple-600 mb-2">2:00 PM</p>
-                        <p class="text-gray-600">Verbal Reasoning</p>
-                    </div>
-                </div>
-
-                <!-- Live Classes -->
-                <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-6">Today's Classes</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <span class="text-blue-600 font-semibold">VR</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-900">Verbal Reasoning - Advanced</h4>
-                                    <p class="text-gray-600">Dr. Sarah Ahmed • 2:00 PM - 3:30 PM</p>
-                                </div>
-                            </div>
-                            <button class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors" onclick="joinClass('Verbal Reasoning')">
-                                Join Class
-                            </button>
-                        </div>
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                                    <span class="text-purple-600 font-semibold">QR</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-900">Quantitative Reasoning</h4>
-                                    <p class="text-gray-600">Prof. Rahman Khan • 4:00 PM - 5:30 PM</p>
-                                </div>
-                            </div>
-                            <button class="bg-gray-300 text-gray-600 px-6 py-2 rounded-lg cursor-not-allowed">
-                                Starts in 2h
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Lecturer Dashboard -->
-            <div id="lecturerDashboard" class="hidden">
-                <div class="grid md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white rounded-xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">My Classes</h3>
-                            <span class="text-2xl">🎓</span>
-                        </div>
-                        <p class="text-3xl font-bold text-blue-600 mb-2">8</p>
-                        <p class="text-gray-600">Active Classes</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Students</h3>
-                            <span class="text-2xl">👥</span>
-                        </div>
-                        <p class="text-3xl font-bold text-green-600 mb-2">156</p>
-                        <p class="text-gray-600">Total Enrolled</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Rating</h3>
-                            <span class="text-2xl">⭐</span>
-                        </div>
-                        <p class="text-3xl font-bold text-yellow-600 mb-2">4.9</p>
-                        <p class="text-gray-600">Average Rating</p>
-                    </div>
-                </div>
-
-                <!-- Lecturer Classes -->
-                <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-semibold text-gray-900">My Classes</h3>
-                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="createClass()">
-                            Create New Class
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">My Courses</h3>
+                        <button onclick="openModal('createCourseModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            Create Course
                         </button>
                     </div>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <span class="text-blue-600 font-semibold">VR</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-900">Verbal Reasoning - Advanced</h4>
-                                    <p class="text-gray-600">32 students • 2:00 PM - 3:30 PM</p>
-                                </div>
-                            </div>
-                            <button class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors" onclick="startClass('Verbal Reasoning')">
-                                Start Class
-                            </button>
-                        </div>
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                                    <span class="text-purple-600 font-semibold">AW</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-900">Analytical Writing</h4>
-                                    <p class="text-gray-600">28 students • 6:00 PM - 7:30 PM</p>
-                                </div>
-                            </div>
-                            <button class="bg-gray-300 text-gray-600 px-6 py-2 rounded-lg cursor-not-allowed">
-                                Scheduled
-                            </button>
-                        </div>
+                    <div id="lecturer-course-list" class="space-y-4">
+                        <!-- Lecturer courses will be populated here -->
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Recent Activity</h3>
+                    <div id="lecturer-activity" class="space-y-4">
+                        <!-- Recent activity will be populated here -->
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <!-- Virtual Classroom -->
-    <div id="classroomModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl w-full h-full max-w-6xl max-h-[90vh] m-4 flex flex-col">
-            <!-- Classroom Header -->
-            <div class="flex justify-between items-center p-6 border-b">
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Login</h2>
+                <button onclick="closeModal('loginModal')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="loginForm" class="space-y-4">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-900" id="classTitle">Verbal Reasoning - Advanced</h2>
-                    <p class="text-gray-600" id="classInstructor">Dr. Sarah Ahmed</p>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="loginEmail" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-medium">🔴 LIVE</span>
-                    <button id="leaveClassBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
-                        Leave Class
-                    </button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="loginPassword" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-            </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
 
-            <!-- Classroom Content -->
-            <div class="flex-1 flex">
-                <!-- Main Video Area -->
-                <div class="flex-1 p-6">
-                    <div class="bg-gray-900 rounded-xl h-full flex items-center justify-center">
-                        <div class="text-center text-white">
-                            <div class="w-32 h-32 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span class="text-4xl">👨‍🏫</span>
-                            </div>
-                            <h3 class="text-xl font-semibold mb-2">Dr. Sarah Ahmed</h3>
-                            <p class="text-gray-300">Teaching Verbal Reasoning Strategies</p>
-                            <div class="mt-6 flex justify-center space-x-4">
-                                <button class="bg-gray-700 hover:bg-gray-600 p-3 rounded-full transition-colors">
-                                    <span class="text-xl">🎤</span>
-                                </button>
-                                <button class="bg-gray-700 hover:bg-gray-600 p-3 rounded-full transition-colors">
-                                    <span class="text-xl">📹</span>
-                                </button>
-                                <button class="bg-gray-700 hover:bg-gray-600 p-3 rounded-full transition-colors">
-                                    <span class="text-xl">📺</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chat Sidebar -->
-                <div class="w-80 border-l bg-gray-50 flex flex-col">
-                    <div class="p-4 border-b">
-                        <h3 class="font-semibold text-gray-900">Class Chat</h3>
-                    </div>
-                    <div class="flex-1 p-4 overflow-y-auto" id="chatMessages">
-                        <div class="space-y-3">
-                            <div class="bg-white p-3 rounded-lg">
-                                <p class="text-sm font-medium text-blue-600">Dr. Sarah Ahmed</p>
-                                <p class="text-sm text-gray-700">Welcome everyone! Today we'll focus on reading comprehension strategies.</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg">
-                                <p class="text-sm font-medium text-gray-600">Rahul M.</p>
-                                <p class="text-sm text-gray-700">Thank you! Looking forward to the session.</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg">
-                                <p class="text-sm font-medium text-gray-600">Fatima K.</p>
-                                <p class="text-sm text-gray-700">Can we discuss time management techniques?</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-4 border-t">
-                        <div class="flex space-x-2">
-                            <input type="text" id="chatInput" placeholder="Type your message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                                Send
-                            </button>
-                        </div>
-                    </div>
-                </div>
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Register</h2>
+                <button onclick="closeModal('registerModal')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <input type="text" id="registerName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="registerEmail" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                    <input type="tel" id="registerPhone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="registerPassword" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Register as</label>
+                    <select id="userType" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select user type</option>
+                        <option value="student">Student</option>
+                        <option value="lecturer">Lecturer</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    Register
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Course Modal -->
+    <div id="createCourseModal" class="modal">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Create New Course</h2>
+                <button onclick="closeModal('createCourseModal')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="createCourseForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Course Title</label>
+                    <input type="text" id="courseTitle" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea id="courseDescription" required rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Duration (weeks)</label>
+                    <input type="number" id="courseDuration" required min="1" max="52" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Price (BDT)</label>
+                    <input type="number" id="coursePrice" required min="0" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    Create Course
+                </button>
+            </form>
         </div>
     </div>
 
     <script>
-        let currentUser = null;
-        let userType = 'student';
-        let isSignupMode = false;
-
-        // User storage (in real app, this would be a database)
+        // Data Storage (In a real app, this would be a database)
         let users = JSON.parse(localStorage.getItem('greUsers') || '[]');
+        let courses = JSON.parse(localStorage.getItem('greCourses') || '[]');
+        let enrollments = JSON.parse(localStorage.getItem('greEnrollments') || '[]');
+        let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
-        // Modal controls
-        const loginModal = document.getElementById('loginModal');
-        const loginBtn = document.getElementById('loginBtn');
-        const signupBtn = document.getElementById('signupBtn');
-        const closeModal = document.getElementById('closeModal');
-        const heroSection = document.getElementById('heroSection');
-        const featuresSection = document.getElementById('featuresSection');
-        const dashboardSection = document.getElementById('dashboardSection');
-        const classroomModal = document.getElementById('classroomModal');
-
-        // Tab switching
-        document.getElementById('studentTab').addEventListener('click', () => {
-            userType = 'student';
-            document.getElementById('studentTab').classList.add('active-tab');
-            document.getElementById('lecturerTab').classList.remove('active-tab');
-            document.getElementById('studentTab').classList.remove('text-gray-600');
-            document.getElementById('lecturerTab').classList.add('text-gray-600');
-        });
-
-        document.getElementById('lecturerTab').addEventListener('click', () => {
-            userType = 'lecturer';
-            document.getElementById('lecturerTab').classList.add('active-tab');
-            document.getElementById('studentTab').classList.remove('active-tab');
-            document.getElementById('lecturerTab').classList.remove('text-gray-600');
-            document.getElementById('studentTab').classList.add('text-gray-600');
-        });
-
-        // Modal controls
-        loginBtn.addEventListener('click', () => {
-            showLoginForm();
-            loginModal.classList.remove('hidden');
-        });
-
-        signupBtn.addEventListener('click', () => {
-            showSignupForm();
-            loginModal.classList.remove('hidden');
-        });
-
-        closeModal.addEventListener('click', () => {
-            loginModal.classList.add('hidden');
-        });
-
-        document.getElementById('getStartedBtn').addEventListener('click', () => {
-            showSignupForm();
-            loginModal.classList.remove('hidden');
-        });
-
-        // Form switching
-        document.getElementById('switchToSignup').addEventListener('click', () => {
-            showSignupForm();
-        });
-
-        document.getElementById('switchToLogin').addEventListener('click', () => {
-            showLoginForm();
-        });
-
-        function showLoginForm() {
-            isSignupMode = false;
-            document.getElementById('modalTitle').textContent = 'Welcome Back!';
-            document.getElementById('modalSubtitle').textContent = 'Sign in to your GRE Bangladesh account';
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('signupForm').classList.add('hidden');
-            document.getElementById('switchToSignup').classList.remove('hidden');
-            document.getElementById('switchToLogin').classList.add('hidden');
+        // Initialize default courses if none exist
+        if (courses.length === 0) {
+            courses = [
+                {
+                    id: 1,
+                    title: 'GRE Verbal Reasoning Mastery',
+                    description: 'Master verbal reasoning with comprehensive practice and strategies',
+                    duration: 8,
+                    price: 15000,
+                    instructor: 'Dr. Sarah Ahmed',
+                    students: 45,
+                    rating: 4.8,
+                    isLive: true
+                },
+                {
+                    id: 2,
+                    title: 'GRE Quantitative Reasoning',
+                    description: 'Excel in quantitative reasoning with advanced problem-solving techniques',
+                    duration: 6,
+                    price: 12000,
+                    instructor: 'Prof. Rahman Khan',
+                    students: 38,
+                    rating: 4.9,
+                    isLive: true
+                },
+                {
+                    id: 3,
+                    title: 'GRE Analytical Writing',
+                    description: 'Perfect your analytical writing skills with expert guidance',
+                    duration: 4,
+                    price: 8000,
+                    instructor: 'Ms. Fatima Begum',
+                    students: 29,
+                    rating: 4.7,
+                    isLive: false
+                }
+            ];
+            localStorage.setItem('greCourses', JSON.stringify(courses));
         }
 
-        function showSignupForm() {
-            isSignupMode = true;
-            document.getElementById('modalTitle').textContent = 'Join GRE Bangladesh!';
-            document.getElementById('modalSubtitle').textContent = 'Create your account to start learning';
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('signupForm').classList.remove('hidden');
-            document.getElementById('switchToSignup').classList.add('hidden');
-            document.getElementById('switchToLogin').classList.remove('hidden');
+        // Check if user is logged in on page load
+        if (currentUser) {
+            showDashboard();
         }
 
-        // Signup form
-        document.getElementById('signupForm').addEventListener('submit', (e) => {
+        // Update counters
+        function updateCounters() {
+            const students = users.filter(u => u.type === 'student').length;
+            const lecturers = users.filter(u => u.type === 'lecturer').length;
+            
+            document.getElementById('student-count').textContent = students;
+            document.getElementById('lecturer-count').textContent = lecturers;
+            document.getElementById('course-count').textContent = courses.length;
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            
+            notificationText.textContent = message;
+            notification.className = `notification ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white px-6 py-3 rounded-lg shadow-lg show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Smooth scrolling
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+
+        // Registration
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const phone = document.getElementById('signupPhone').value;
-            const password = document.getElementById('signupPassword').value;
-            const agreeTerms = document.getElementById('agreeTerms').checked;
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const phone = document.getElementById('registerPhone').value;
+            const password = document.getElementById('registerPassword').value;
+            const type = document.getElementById('userType').value;
 
             // Check if user already exists
-            const existingUser = users.find(user => user.email === email);
-            if (existingUser) {
-                alert('An account with this email already exists. Please login instead.');
+            if (users.find(u => u.email === email)) {
+                showNotification('User with this email already exists!', 'error');
                 return;
             }
 
-            if (name && email && phone && password && agreeTerms) {
-                // Create new user
-                const newUser = {
-                    id: Date.now(),
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    password: password, // In real app, this would be hashed
-                    type: userType,
-                    joinDate: new Date().toISOString(),
-                    classes: userType === 'student' ? [] : [],
-                    progress: userType === 'student' ? 0 : null
-                };
+            // Create new user
+            const newUser = {
+                id: Date.now(),
+                name,
+                email,
+                phone,
+                password,
+                type,
+                registeredAt: new Date().toISOString(),
+                courses: [],
+                progress: 0
+            };
 
-                users.push(newUser);
-                localStorage.setItem('greUsers', JSON.stringify(users));
-
-                alert('Account created successfully! You can now login.');
-                
-                // Switch to login form
-                showLoginForm();
-                
-                // Clear signup form
-                document.getElementById('signupName').value = '';
-                document.getElementById('signupEmail').value = '';
-                document.getElementById('signupPhone').value = '';
-                document.getElementById('signupPassword').value = '';
-                document.getElementById('agreeTerms').checked = false;
-            }
+            users.push(newUser);
+            localStorage.setItem('greUsers', JSON.stringify(users));
+            
+            showNotification(`Registration successful! Welcome ${name}!`);
+            closeModal('registerModal');
+            
+            // Auto login
+            currentUser = newUser;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showDashboard();
+            
+            updateCounters();
         });
 
-        // Login form
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
-            // Find user in storage
-            const user = users.find(u => u.email === email && u.password === password && u.type === userType);
-
+            const user = users.find(u => u.email === email && u.password === password);
+            
             if (user) {
                 currentUser = user;
-
-                // Hide hero and show dashboard
-                heroSection.classList.add('hidden');
-                featuresSection.classList.add('hidden');
-                dashboardSection.classList.remove('hidden');
-                loginModal.classList.add('hidden');
-
-                // Update dashboard based on user type
-                if (userType === 'lecturer') {
-                    document.getElementById('dashboardTitle').textContent = 'Lecturer Dashboard';
-                    document.getElementById('dashboardSubtitle').textContent = `Welcome back, ${user.name}! Manage your classes and students`;
-                    document.getElementById('studentDashboard').classList.add('hidden');
-                    document.getElementById('lecturerDashboard').classList.remove('hidden');
-                } else {
-                    document.getElementById('dashboardTitle').textContent = 'Student Dashboard';
-                    document.getElementById('dashboardSubtitle').textContent = `Welcome back, ${user.name}! Ready to continue your GRE preparation?`;
-                    document.getElementById('studentDashboard').classList.remove('hidden');
-                    document.getElementById('lecturerDashboard').classList.add('hidden');
-                }
-
-                // Update navigation
-                document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('signupBtn').classList.add('hidden');
-
-                // Clear login form
-                document.getElementById('loginEmail').value = '';
-                document.getElementById('loginPassword').value = '';
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showNotification(`Welcome back, ${user.name}!`);
+                closeModal('loginModal');
+                showDashboard();
             } else {
-                alert('Invalid email, password, or user type. Please check your credentials and make sure you\'re logging in as the correct user type.');
+                showNotification('Invalid email or password!', 'error');
             }
         });
+
+        // Show appropriate dashboard
+        function showDashboard() {
+            document.getElementById('main-content').classList.add('dashboard-hidden');
+            document.getElementById('user-menu').classList.remove('hidden');
+            document.getElementById('user-name').textContent = currentUser.name;
+            
+            if (currentUser.type === 'student') {
+                document.getElementById('student-dashboard').classList.remove('dashboard-hidden');
+                document.getElementById('student-dashboard').classList.add('dashboard-active');
+                document.getElementById('student-name-display').textContent = currentUser.name;
+                loadStudentDashboard();
+            } else if (currentUser.type === 'lecturer') {
+                document.getElementById('lecturer-dashboard').classList.remove('dashboard-hidden');
+                document.getElementById('lecturer-dashboard').classList.add('dashboard-active');
+                document.getElementById('lecturer-name-display').textContent = currentUser.name;
+                loadLecturerDashboard();
+            }
+        }
+
+        // Load student dashboard
+        function loadStudentDashboard() {
+            const userEnrollments = enrollments.filter(e => e.studentId === currentUser.id);
+            const enrolledCourses = userEnrollments.length;
+            
+            document.getElementById('enrolled-courses').textContent = enrolledCourses;
+            document.getElementById('live-classes').textContent = userEnrollments.filter(e => {
+                const course = courses.find(c => c.id === e.courseId);
+                return course && course.isLive;
+            }).length;
+            document.getElementById('practice-tests').textContent = enrolledCourses * 5; // 5 tests per course
+            document.getElementById('progress').textContent = currentUser.progress + '%';
+
+            // Load student courses
+            const studentCoursesDiv = document.getElementById('student-courses');
+            studentCoursesDiv.innerHTML = '';
+            
+            if (userEnrollments.length === 0) {
+                studentCoursesDiv.innerHTML = '<p class="text-gray-500">No courses enrolled yet. <button onclick="showMainContent()" class="text-blue-600 hover:underline">Browse courses</button></p>';
+            } else {
+                userEnrollments.forEach(enrollment => {
+                    const course = courses.find(c => c.id === enrollment.courseId);
+                    if (course) {
+                        const courseDiv = document.createElement('div');
+                        courseDiv.className = 'border border-gray-200 rounded-lg p-4';
+                        courseDiv.innerHTML = `
+                            <h4 class="font-semibold text-gray-800">${course.title}</h4>
+                            <p class="text-sm text-gray-600 mb-2">${course.instructor}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm ${course.isLive ? 'text-green-600' : 'text-gray-500'}">${course.isLive ? '🔴 Live' : '📹 Recorded'}</span>
+                                <button class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                    ${course.isLive ? 'Join Class' : 'Watch'}
+                                </button>
+                            </div>
+                        `;
+                        studentCoursesDiv.appendChild(courseDiv);
+                    }
+                });
+            }
+
+            // Load upcoming classes
+            const upcomingClassesDiv = document.getElementById('upcoming-classes');
+            upcomingClassesDiv.innerHTML = `
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-800">GRE Verbal - Session 5</h4>
+                    <p class="text-sm text-gray-600">Today, 3:00 PM</p>
+                    <button class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 mt-2">Join Now</button>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-800">GRE Quant - Practice Test</h4>
+                    <p class="text-sm text-gray-600">Tomorrow, 10:00 AM</p>
+                    <button class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 mt-2">Set Reminder</button>
+                </div>
+            `;
+        }
+
+        // Load lecturer dashboard
+        function loadLecturerDashboard() {
+            const lecturerCourses = courses.filter(c => c.instructor === currentUser.name);
+            const totalStudents = lecturerCourses.reduce((sum, course) => sum + course.students, 0);
+            
+            document.getElementById('lecturer-courses').textContent = lecturerCourses.length;
+            document.getElementById('total-students').textContent = totalStudents;
+            document.getElementById('live-sessions').textContent = lecturerCourses.filter(c => c.isLive).length;
+
+            // Load lecturer courses
+            const lecturerCourseListDiv = document.getElementById('lecturer-course-list');
+            lecturerCourseListDiv.innerHTML = '';
+            
+            if (lecturerCourses.length === 0) {
+                lecturerCourseListDiv.innerHTML = '<p class="text-gray-500">No courses created yet.</p>';
+            } else {
+                lecturerCourses.forEach(course => {
+                    const courseDiv = document.createElement('div');
+                    courseDiv.className = 'border border-gray-200 rounded-lg p-4';
+                    courseDiv.innerHTML = `
+                        <h4 class="font-semibold text-gray-800">${course.title}</h4>
+                        <p class="text-sm text-gray-600 mb-2">${course.students} students • ${course.rating}★</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm ${course.isLive ? 'text-green-600' : 'text-gray-500'}">${course.isLive ? '🔴 Live' : '📹 Recorded'}</span>
+                            <button class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                Manage
+                            </button>
+                        </div>
+                    `;
+                    lecturerCourseListDiv.appendChild(courseDiv);
+                });
+            }
+
+            // Load recent activity
+            const lecturerActivityDiv = document.getElementById('lecturer-activity');
+            lecturerActivityDiv.innerHTML = `
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <p class="text-sm text-gray-800">New student enrolled in GRE Verbal</p>
+                    <p class="text-xs text-gray-500">2 hours ago</p>
+                </div>
+                <div class="border-l-4 border-green-500 pl-4">
+                    <p class="text-sm text-gray-800">Live session completed successfully</p>
+                    <p class="text-xs text-gray-500">1 day ago</p>
+                </div>
+                <div class="border-l-4 border-yellow-500 pl-4">
+                    <p class="text-sm text-gray-800">Course rating updated to 4.8★</p>
+                    <p class="text-xs text-gray-500">2 days ago</p>
+                </div>
+            `;
+        }
+
+        // Create course
+        document.getElementById('createCourseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('courseTitle').value;
+            const description = document.getElementById('courseDescription').value;
+            const duration = parseInt(document.getElementById('courseDuration').value);
+            const price = parseInt(document.getElementById('coursePrice').value);
+
+            const newCourse = {
+                id: Date.now(),
+                title,
+                description,
+                duration,
+                price,
+                instructor: currentUser.name,
+                students: 0,
+                rating: 5.0,
+                isLive: true,
+                createdAt: new Date().toISOString()
+            };
+
+            courses.push(newCourse);
+            localStorage.setItem('greCourses', JSON.stringify(courses));
+            
+            showNotification('Course created successfully!');
+            closeModal('createCourseModal');
+            loadLecturerDashboard();
+            loadCourses();
+            updateCounters();
+        });
+
+        // Show main content
+        function showMainContent() {
+            document.getElementById('main-content').classList.remove('dashboard-hidden');
+            document.getElementById('student-dashboard').classList.add('dashboard-hidden');
+            document.getElementById('lecturer-dashboard').classList.add('dashboard-hidden');
+        }
 
         // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
+        function logout() {
             currentUser = null;
-            heroSection.classList.remove('hidden');
-            featuresSection.classList.remove('hidden');
-            dashboardSection.classList.add('hidden');
-            document.getElementById('loginBtn').classList.remove('hidden');
-            document.getElementById('signupBtn').classList.remove('hidden');
-            
-            // Reset forms
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('signupName').value = '';
-            document.getElementById('signupEmail').value = '';
-            document.getElementById('signupPhone').value = '';
-            document.getElementById('signupPassword').value = '';
-            document.getElementById('agreeTerms').checked = false;
-            
-            // Reset to login form
-            showLoginForm();
-        });
-
-        // Class functions
-        function joinClass(className) {
-            document.getElementById('classTitle').textContent = className + ' - Advanced';
-            document.getElementById('classInstructor').textContent = 'Dr. Sarah Ahmed';
-            classroomModal.classList.remove('hidden');
+            localStorage.removeItem('currentUser');
+            document.getElementById('user-menu').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('dashboard-hidden');
+            document.getElementById('student-dashboard').classList.add('dashboard-hidden');
+            document.getElementById('lecturer-dashboard').classList.add('dashboard-hidden');
+            showNotification('Logged out successfully!');
         }
 
-        function startClass(className) {
-            document.getElementById('classTitle').textContent = className + ' - Advanced';
-            document.getElementById('classInstructor').textContent = 'You are teaching';
-            classroomModal.classList.remove('hidden');
-        }
-
-        function createClass() {
-            alert('Class creation feature would open a form to schedule new classes with details like subject, time, duration, and student capacity.');
-        }
-
-        // Leave class
-        document.getElementById('leaveClassBtn').addEventListener('click', () => {
-            classroomModal.classList.add('hidden');
-        });
-
-        // Chat functionality
-        function sendMessage() {
-            const chatInput = document.getElementById('chatInput');
-            const message = chatInput.value.trim();
+        // Load courses
+        function loadCourses() {
+            const coursesGrid = document.getElementById('courses-grid');
+            coursesGrid.innerHTML = '';
             
-            if (message) {
-                const chatMessages = document.getElementById('chatMessages');
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'bg-blue-50 p-3 rounded-lg';
-                messageDiv.innerHTML = `
-                    <p class="text-sm font-medium text-blue-600">${currentUser ? currentUser.name : 'You'}</p>
-                    <p class="text-sm text-gray-700">${message}</p>
+            courses.forEach(course => {
+                const courseDiv = document.createElement('div');
+                courseDiv.className = 'bg-white rounded-lg shadow-lg overflow-hidden card-hover';
+                courseDiv.innerHTML = `
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-semibold text-gray-800">${course.title}</h3>
+                            <span class="text-sm ${course.isLive ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'} px-2 py-1 rounded-full">
+                                ${course.isLive ? '🔴 Live' : '📹 Recorded'}
+                            </span>
+                        </div>
+                        <p class="text-gray-600 mb-4">${course.description}</p>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Instructor:</span>
+                                <span class="font-medium">${course.instructor}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Duration:</span>
+                                <span class="font-medium">${course.duration} weeks</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Students:</span>
+                                <span class="font-medium">${course.students}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Rating:</span>
+                                <span class="font-medium">${course.rating}★</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-blue-600">৳${course.price.toLocaleString()}</span>
+                            <button onclick="enrollCourse(${course.id})" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                Enroll Now
+                            </button>
+                        </div>
+                    </div>
                 `;
-                chatMessages.appendChild(messageDiv);
-                chatInput.value = '';
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                coursesGrid.appendChild(courseDiv);
+            });
+        }
+
+        // Enroll in course
+        function enrollCourse(courseId) {
+            if (!currentUser) {
+                showNotification('Please login to enroll in courses!', 'error');
+                openModal('loginModal');
+                return;
+            }
+
+            if (currentUser.type !== 'student') {
+                showNotification('Only students can enroll in courses!', 'error');
+                return;
+            }
+
+            // Check if already enrolled
+            const existingEnrollment = enrollments.find(e => e.studentId === currentUser.id && e.courseId === courseId);
+            if (existingEnrollment) {
+                showNotification('You are already enrolled in this course!', 'error');
+                return;
+            }
+
+            // Create enrollment
+            const enrollment = {
+                id: Date.now(),
+                studentId: currentUser.id,
+                courseId: courseId,
+                enrolledAt: new Date().toISOString(),
+                progress: 0
+            };
+
+            enrollments.push(enrollment);
+            localStorage.setItem('greEnrollments', JSON.stringify(enrollments));
+
+            // Update course student count
+            const course = courses.find(c => c.id === courseId);
+            if (course) {
+                course.students++;
+                localStorage.setItem('greCourses', JSON.stringify(courses));
+            }
+
+            showNotification('Successfully enrolled in the course!');
+            loadCourses();
+            if (document.getElementById('student-dashboard').classList.contains('dashboard-active')) {
+                loadStudentDashboard();
             }
         }
 
-        // Enter key for chat
-        document.getElementById('chatInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            // Mobile menu functionality can be added here
         });
 
-        // Close modals on outside click
-        window.addEventListener('click', (e) => {
-            if (e.target === loginModal) {
-                loginModal.classList.add('hidden');
-            }
-            if (e.target === classroomModal) {
-                classroomModal.classList.add('hidden');
-            }
+        // Initialize page
+        updateCounters();
+        loadCourses();
+
+        // Add smooth scrolling to navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'970ef25de5ba3c59',t:'MTc1NTQ5NDI2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9776db7e14513c6f',t:'MTc1NjU4Mzg0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
